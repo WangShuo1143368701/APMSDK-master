@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.huawu.fivesmart.audio.apm.MainActivity"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_hello"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        android:layout_gravity="center_horizontal"/>
+    <Button
+        android:id="@+id/btn_start_recoder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="开始录制"
+        android:layout_gravity="center_horizontal"/>
+
+    <Button
+        android:id="@+id/btn_stop_recoder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="停止录制"
+        android:layout_gravity="center_horizontal"/>
+
+    <Button
+        android:id="@+id/btn_echo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="回声消除测试"
+        android:layout_gravity="center_horizontal"/>
+
+</LinearLayout>
