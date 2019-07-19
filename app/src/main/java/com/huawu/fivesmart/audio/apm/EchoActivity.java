@@ -23,13 +23,14 @@ public class EchoActivity extends AppCompatActivity
     private Apm mApm;
     private AudioMediaCodecEncoder mAudioEncoder;
     private int j =0;
+    private TestUtils mTestUtils;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_echo);
 
-
+        mTestUtils = new TestUtils();
         intApm();
         //doAECM();
         doAGC();
@@ -163,16 +164,12 @@ public class EchoActivity extends AppCompatActivity
 
             FileInputStream fin = new FileInputStream(new File(
                     Environment.getExternalStorageDirectory().getPath()
-                            + "/vtmp/voov.wav"));
-
-            FileOutputStream fout = new FileOutputStream(new File(
-                    Environment.getExternalStorageDirectory().getPath()
-                            + "/vtmp/srcOutoutOUT.pcm"));
+                            + "/vtmp/a1.wav"));
 
             long audioFileSize = fin.getChannel().size();
             int i = 0;
 
-            final int cacheSize = 2048;
+            final int cacheSize = 960;
             byte[] pcmInputCache = new byte[cacheSize];
 
             // core procession
@@ -190,22 +187,19 @@ public class EchoActivity extends AppCompatActivity
 
                 mApm.ProcessStream(aecTmpIn,0);
 
-
-
-                //Log.e("wangshuo","aecTmpIn222 = "+aecTmpIn.length);
-                // output
                 byte[] aecBuf = new byte[cacheSize];
                 ByteBuffer.wrap(aecBuf).order(ByteOrder.LITTLE_ENDIAN)
                         .asShortBuffer().put(aecTmpIn);
 
-                fout.write(aecBuf);
-                mAudioEncoder.pushAudioFrameSync(aecBuf, getPTSUs(), false);
+                mTestUtils.dumpWAVFile(aecBuf,48000,1);
+                //mAudioEncoder.pushAudioFrameSync(aecBuf, getPTSUs(), false);
                 Log.d("wangshuo","aecBuf = "+aecBuf.length+" time = "+(System.currentTimeMillis()-time));
             }
             Toast.makeText(EchoActivity.this,"完成",Toast.LENGTH_SHORT).show();
-            fout.close();
+
             fin.close();
             mApm.destroy();
+            mTestUtils.releaseWav();
         } catch (Exception e) {
             Log.e("wangshuo","e ="+e.getMessage());
             e.printStackTrace();
