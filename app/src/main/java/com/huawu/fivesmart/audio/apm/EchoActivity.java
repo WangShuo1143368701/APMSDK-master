@@ -33,7 +33,8 @@ public class EchoActivity extends AppCompatActivity
         mTestUtils = new TestUtils();
         intApm();
         //doAECM();
-        doAGC();
+        //doAGC();
+          doNS();
     }
 
     private void intApm()
@@ -53,42 +54,65 @@ public class EchoActivity extends AppCompatActivity
 
         //mApm.highPassfilterEnable(true);
 
-        //mApm.nsEnable(true);
-        //mApm.nsSetLevel(Apm.NS_Level.Moderate);
+        //-------- NS ---------
+        mApm.nsEnable(true);
+        mApm.nsSetLevel(Apm.NS_Level.Moderate);
 
-        mApm.agcEnableLimiter(true);
-        mApm.agcEnable(true);
-        mApm.agcSetMode(Apm.AGC_Mode.FixedDigital);
-        //mApm.agcSetAnalogLevelLimits(0,255);
-        mApm.agcSetCompressionGainDb(90); //[0,90]
-        mApm.agcSetTargetLevelDbfs(0);  //[0,31]
+        //-------- AGC ---------
+//        mApm.agcEnableLimiter(true);
+//        mApm.agcEnable(true);
+//        mApm.agcSetMode(Apm.AGC_Mode.FixedDigital);
+//        //mApm.agcSetAnalogLevelLimits(0,255);
+//        mApm.agcSetCompressionGainDb(90); //[0,90]
+//        mApm.agcSetTargetLevelDbfs(0);  //[0,31]
     }
-    private void startAudioAACEncoder()
+
+    private void doNS()
     {
-        mAudioEncoder.setListener(new TXIAudioEncoderListener() {
-            @Override
-            public void onEncodeAAC(ByteBuffer byteBuffer, MediaCodec.BufferInfo bufferInfo) {
-                if (byteBuffer == null || bufferInfo == null) {
-                    return;
-                }
-                TestUtils.dumpAACFile(byteBuffer,bufferInfo,48000,1);
+        try {
+
+            FileInputStream fin = new FileInputStream(new File(
+                    Environment.getExternalStorageDirectory().getPath()
+                            + "/vtmp/12.wav"));
+
+            long audioFileSize = fin.getChannel().size();
+            int i = 0;
+
+            final int cacheSize = 960;
+            byte[] pcmInputCache = new byte[cacheSize];
+
+            // core procession
+            for (/* empty */; fin.read(pcmInputCache, 0, pcmInputCache.length) != -1; /* empty */) {
+                // convert bytes[] to shorts[], and make it into little endian.
+                short[] aecTmpIn = new short[cacheSize / 2];
+                ByteBuffer.wrap(pcmInputCache).order(ByteOrder.LITTLE_ENDIAN)
+                        .asShortBuffer().get(aecTmpIn);
+
+                i++;
+                float progress = (float) cacheSize*i/audioFileSize;
+
+                long time = System.currentTimeMillis();
+                //Log.d("wangshuo","aecprogress = "+progress);
+
+                mApm.ProcessStream(aecTmpIn,0);
+
+                byte[] aecBuf = new byte[cacheSize];
+                ByteBuffer.wrap(aecBuf).order(ByteOrder.LITTLE_ENDIAN)
+                        .asShortBuffer().put(aecTmpIn);
+
+                mTestUtils.dumpWAVFile(aecBuf,48000,1);
+                //mAudioEncoder.pushAudioFrameSync(aecBuf, getPTSUs(), false);
+                Log.d("wangshuo","doNS aecBuf = "+aecBuf.length+" time = "+(System.currentTimeMillis()-time));
             }
+            Toast.makeText(EchoActivity.this,"doNS 完成",Toast.LENGTH_SHORT).show();
 
-            @Override
-            public void onEncodeFormat(MediaFormat format) {
-
-            }
-
-            @Override
-            public void onEncodeComplete() {
-            }
-        });
-
-        TXHAudioEncoderParam param = new TXHAudioEncoderParam();
-        param.channelCount = 1;
-        param.sampleRate = 48000;
-        param.audioBitrate = 200 * 1024;
-        mAudioEncoder.start(param);
+            fin.close();
+            mApm.destroy();
+            mTestUtils.releaseWav();
+        } catch (Exception e) {
+            Log.e("wangshuo","e ="+e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public void doAECM() {
@@ -183,7 +207,7 @@ public class EchoActivity extends AppCompatActivity
                 float progress = (float) cacheSize*i/audioFileSize;
 
                 long time = System.currentTimeMillis();
-                Log.d("wangshuo","aecprogress = "+progress);
+                Log.d("wangshuo"," doAGC aecprogress = "+progress);
 
                 mApm.ProcessStream(aecTmpIn,0);
 
@@ -193,9 +217,9 @@ public class EchoActivity extends AppCompatActivity
 
                 mTestUtils.dumpWAVFile(aecBuf,48000,1);
                 //mAudioEncoder.pushAudioFrameSync(aecBuf, getPTSUs(), false);
-                Log.d("wangshuo","aecBuf = "+aecBuf.length+" time = "+(System.currentTimeMillis()-time));
+                Log.d("wangshuo"," doAGC aecBuf = "+aecBuf.length+" time = "+(System.currentTimeMillis()-time));
             }
-            Toast.makeText(EchoActivity.this,"完成",Toast.LENGTH_SHORT).show();
+            Toast.makeText(EchoActivity.this," doAGC 完成",Toast.LENGTH_SHORT).show();
 
             fin.close();
             mApm.destroy();
@@ -223,5 +247,33 @@ public class EchoActivity extends AppCompatActivity
         long result = i * (480 * 1000*1000) / 48000;
         i++;
         return result;
+    }
+
+    private void startAudioAACEncoder()
+    {
+        mAudioEncoder.setListener(new TXIAudioEncoderListener() {
+            @Override
+            public void onEncodeAAC(ByteBuffer byteBuffer, MediaCodec.BufferInfo bufferInfo) {
+                if (byteBuffer == null || bufferInfo == null) {
+                    return;
+                }
+                TestUtils.dumpAACFile(byteBuffer,bufferInfo,48000,1);
+            }
+
+            @Override
+            public void onEncodeFormat(MediaFormat format) {
+
+            }
+
+            @Override
+            public void onEncodeComplete() {
+            }
+        });
+
+        TXHAudioEncoderParam param = new TXHAudioEncoderParam();
+        param.channelCount = 1;
+        param.sampleRate = 48000;
+        param.audioBitrate = 200 * 1024;
+        mAudioEncoder.start(param);
     }
 }
