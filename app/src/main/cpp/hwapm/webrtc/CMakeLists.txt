@@ -27,8 +27,9 @@ include_directories( ${HW_APM_SOURCE_DIR} )
 # 生成so动态库
 add_library( webrtc_audio
              SHARED
-             ${HW_APM_SOURCE_DIR}/apm_wrapper.cpp
-            # ${HW_APM_SOURCE_DIR}/apm_wrapper_voov.cpp
+             #${HW_APM_SOURCE_DIR}/apm_wrapper.cpp
+             ${HW_APM_SOURCE_DIR}/apm_processing.cpp
+             ${HW_APM_SOURCE_DIR}/apmProcessJNI.cpp
              )
 
 # 链接各个静态库，注意静态库的顺序会影响到编译过程
