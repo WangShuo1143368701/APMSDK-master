@@ -82,6 +82,10 @@ public class TestUtils {
     public void dumpWAVFile(byte[] buffer,int mSampleRate,int mChannels) {
         try {
             if (mWavFos == null){
+                File file = new File(PATH_WAV);
+                if(file.exists()){
+                    file.delete();
+                }
                 mWavFos = new FileOutputStream(new File(PATH_WAV));
                 writeWaveFileHeader(mWavFos,1024*1000*1000,1024*1000*1000+36,mSampleRate,mChannels,16);
             }

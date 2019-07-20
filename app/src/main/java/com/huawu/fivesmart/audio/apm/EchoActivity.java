@@ -73,7 +73,7 @@ public class EchoActivity extends AppCompatActivity
 
             FileInputStream fin = new FileInputStream(new File(
                     Environment.getExternalStorageDirectory().getPath()
-                            + "/vtmp/12.wav"));
+                            + "/vtmp/a1.wav"));
 
             long audioFileSize = fin.getChannel().size();
             int i = 0;
